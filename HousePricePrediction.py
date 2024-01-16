@@ -1,7 +1,3 @@
-#############################################
-# Adım 1: Kütüphaneler ve Ayarlamalar
-#############################################
-
 import pandas as pd
 import warnings
 import numpy as np
@@ -32,12 +28,10 @@ pd.set_option('display.max_columns', None)
 pd.set_option('display.float_format', lambda x: '%.2f' % x)
 pd.set_option('display.width', 500)
 
-#############################################
-# Adım 2: Verisetlerini Okuma ve İlk Manipülasyonlar
-#############################################
+# Reading and Initial Manipulations of Datasets
 
-train_df = pd.read_csv("C:/Users/PC/PycharmProjects/DataScienceBootcamp2/HousePricePrediction/datasets/train.csv")
-test_df = pd.read_csv("C:/Users/PC/PycharmProjects/DataScienceBootcamp2/HousePricePrediction/datasets/test.csv")
+train_df = pd.read_csv("train.csv")
+test_df = pd.read_csv("test.csv")
 
 df_ = pd.concat([train_df, test_df], axis=0)
 df = df_.copy()
@@ -47,10 +41,7 @@ df.head()
 df.columns = [col.upper() for col in df.columns]
 df["ID"] = df["ID"].astype(str)
 
-
-#############################################
-# Adım 3: Veriyi Tanıma
-#############################################
+# Understanding the Data
 
 def check_data(dataframe, head=5):
     print("### Info ###")
@@ -67,9 +58,7 @@ check_data(df)
 
 df.head(10)
 
-#############################################
-# Adım 4: Date Değişkenlerini Gruplama
-#############################################
+# Grouping Date Variables
 
 date_cols = ["YEARBUILT", "YEARREMODADD"]
 
@@ -87,9 +76,7 @@ for col in date_cols:
     df[col] = df[col].fillna(df[col].mode()[0])
     df[col] = df[col].astype(int)
 
-#############################################
-# Adım 5: Ordinal Değişkenleri Numeric Olarak Değiştirme
-#############################################
+# Converting Ordinal Variables to Numeric
 
 df = df.replace("Ex", 5)
 df = df.replace("Gd", 4)
@@ -109,10 +96,7 @@ for col in cat_but_ord:
 for col in cat_but_ord:
     print(df[col].value_counts())
 
-
-#############################################
-# Adım 6: Değişken Tiplerini Yakalama
-#############################################
+# Capturing Variable Types
 
 def grab_col_names(dataframe, cat_th=10, car_th=20):
     """
@@ -166,7 +150,6 @@ def grab_col_names(dataframe, cat_th=10, car_th=20):
     print(f'cat_but_car: {len(cat_but_car)}')
     print(f'num_but_cat: {len(num_but_cat)}')
     return cat_cols, num_cols, cat_but_car, num_but_cat
-
 
 # MSSubClass 16 nunique ve kategorik Neighborhood 25 nunique ve kategorik
 cat_cols, num_cols, cat_but_car, num_but_cat = grab_col_names(df)
@@ -235,16 +218,12 @@ def grab_col_names(dataframe, cat_th=17, car_th=26):
     print(f'num_but_cat: {len(num_but_cat)}')
     return cat_cols, num_cols, cat_but_car, num_but_cat
 
-
 cat_cols, num_cols, cat_but_car, num_but_cat = grab_col_names(df)
 
 cat_cols = [col for col in cat_cols if col not in cat_but_ord]
 num_cols = num_cols + cat_but_ord
 
-
-#############################################
-# Adım 7: Kategorik / Numerik Değişken Analizi
-#############################################
+# Categorical/Numeric Variable Analysis
 
 def observe_variable_distribution(dataframe, cat_cols, num_cols):
     for column in num_cols:
@@ -259,7 +238,6 @@ def observe_variable_distribution(dataframe, cat_cols, num_cols):
         print(value_counts)
         print('-' * 30)
 
-
 def compare_categorical_and_numeric(dataframe, cat_cols, num_cols):
     num_percentage = len(num_cols) / (len(cat_cols) + len(num_cols)) * 100
     cat_percentage = 100 - num_percentage
@@ -268,15 +246,11 @@ def compare_categorical_and_numeric(dataframe, cat_cols, num_cols):
     print(f"Toplam veri setinde kategorik değişkenlerin yüzdesi: {cat_percentage:.2f}%")
     print('-' * 50)
 
-
 compare_categorical_and_numeric(df, cat_cols, num_cols)
 
 observe_variable_distribution(df, cat_cols, num_cols)
 
-
-#############################################
-# Adım 8: Numeric Değişken Analizi
-#############################################
+# Numeric Variable Analysis
 
 def num_summary(df, numerical_col, plot=False):
     quantiles = [0.05, 0.10, 0.20, 0.30, 0.40, 0.50, 0.60, 0.70, 0.80, 0.90, 0.95, 0.99]
@@ -288,14 +262,10 @@ def num_summary(df, numerical_col, plot=False):
         plt.title(numerical_col)
         plt.show(block=True)
 
-
 for col in num_cols:
     num_summary(df, col, plot=False)
 
-
-#############################################
-# Adım 9: Hedef Değişken Analizi
-#############################################
+# Target Variable Analysis
 
 def group_sum(df, **kwargs):
     """
@@ -323,14 +293,10 @@ def group_sum(df, **kwargs):
     agg_func = kwargs.get('agg_func', [])
     return df.groupby(by=group_cols)[target_cols].agg(kwargs['agg_func'])
 
-
 for col in cat_cols:
     print(group_sum(df, target_cols="SALEPRICE", agg_func="mean", group_cols=col))
 
-
-#############################################
-# Adım 10: Aykırı Değişken Kontrol ve Yakalama
-#############################################
+# Outlier Variable Detection and Handling
 
 def outlier_th(dataframe, col_name, q1=0.01, q3=0.99):
     quartile1 = dataframe[col_name].quantile(q1)
@@ -340,11 +306,9 @@ def outlier_th(dataframe, col_name, q1=0.01, q3=0.99):
     low_limit = quartile1 - 1.5 * interquantile_range
     return low_limit, up_limit
 
-
 low_limit, up_limit = outlier_th(df, num_cols)
 
-
-# Check Outlier Fonksiyonu
+# Check Outlier Function
 def check_outlier(dataframe, col_name):
     low_limit, up_limit = outlier_th(dataframe, col_name)
     if dataframe[(dataframe[col_name] > up_limit) | (dataframe[col_name] < low_limit)].any(axis=None):
@@ -352,34 +316,30 @@ def check_outlier(dataframe, col_name):
     else:
         return False
 
-
 for col in num_cols:
     print(col, check_outlier(df, col))
 
-
-# Outlier kisimlarini, Threshold degerleri ile degistirmek istersek:
+# Replacing Outliers with Threshold Value
 def replace_with_thresholds(dataframe, variable):
     low_limit, up_limit = outlier_th(dataframe, variable)
     dataframe.loc[(dataframe[variable] < low_limit), variable] = low_limit
     dataframe.loc[(dataframe[variable] > up_limit), variable] = up_limit
 
 
-# Eşik değerleri ile değiştirmeden önce kontrol edelim:
+# Check Before Replacing with Threshold Values:
 for col in num_cols:
     print(col, check_outlier(df, col))
 
-# Eşik değerlerini değiştirelim
+# Modify the Threshold Values
 for col in num_cols:
     replace_with_thresholds(df, col)
 
-# Tekrar kontrol edelim
+# Check Again
 for col in num_cols:
     print(col, check_outlier(df, col))
 
+# Missing Data Analysis
 
-#############################################
-# Adım 11: Eksik Gözlen Analizi
-#############################################
 def missing_values(dataframe, na_name=False):
     na_columns = [col for col in dataframe.columns if dataframe[col].isnull().sum() > 0]
 
@@ -391,9 +351,7 @@ def missing_values(dataframe, na_name=False):
     if na_name:
         return na_columns, n_miss, ratio
 
-
 na_cols, n_miss, ratio = missing_values(df, True)
-
 
 def missing_vs_target(dataframe, target, na_columns):
     temp_df = df.copy()
@@ -409,9 +367,7 @@ def missing_vs_target(dataframe, target, na_columns):
 
 missing_vs_target(df, "SALEPRICE", na_cols)
 
-#############################################
-# Adım 12: Eksik Gözlem İşlemleri
-#############################################
+# Missing Observation Analysis
 
 for i, j in zip(n_miss.index, ratio):
     if j > 90:
@@ -434,9 +390,7 @@ for i, j in zip(n_miss.index, ratio):
     if j < 10:
         df[i] = df[i].fillna(df[i].mean())
 
-#############################################
-# Adım 13: Numeric Eksik Gözlemler İçin KNN Imputer
-#############################################
+# KNN Imputer for Numeric Missing Observations
 
 na_cols, n_miss, ratio = missing_values(df, True)
 
@@ -462,10 +416,7 @@ df["LOTFRONTAGE_IMPUTED"] = dff[["LOTFRONTAGE"]]
 df = df.drop("LOTFRONTAGE_IMPUTED", axis=1)
 df["LOTFRONTAGE"] = dff[["LOTFRONTAGE"]]
 
-
-#############################################
-# Adım 14: ENCODING
-#############################################
+# ENCODING
 
 def rare_encoder(dataframe, rare_perc):
     temp_df = dataframe.copy()
@@ -479,7 +430,6 @@ def rare_encoder(dataframe, rare_perc):
         temp_df[var] = np.where(temp_df[var].isin(rare_labels), 'Rare', temp_df[var])
 
     return temp_df
-
 
 def rare_analyser(dataframe, target, cat_cols):
     for col in cat_cols:
@@ -504,7 +454,6 @@ le = LabelEncoder()
 binary_cols = [col for col in df.columns if df[col].dtype not in [int, float]
                and df[col].nunique() == 2]
 
-
 def label_encoder(dataframe, binary_col):
     labelencoder = LabelEncoder()
     dataframe[binary_col] = labelencoder.fit_transform(dataframe[binary_col])
@@ -516,12 +465,10 @@ for col in binary_cols:
 
 df.head()
 
-
 # One Hot Encoder
 def one_hot_encoder(dataframe, categorical_cols, drop_first=True):
     dataframe = pd.get_dummies(dataframe, columns=categorical_cols, drop_first=drop_first)
     return dataframe
-
 
 df = one_hot_encoder(df, cat_cols)
 df.head()
@@ -532,9 +479,7 @@ df[num_cols] = scaler.fit_transform(df[num_cols])
 
 df.head()
 
-#############################################
-# Adım 15: MODELLEME
-#############################################
+# Modeling
 
 df.info()
 
@@ -547,11 +492,7 @@ y = train["SALEPRICE"]
 X = train.drop(["SALEPRICE"], axis=1)
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.30, random_state=17)
 
-#############################################
-# Adım 16: LİNEER REGRESYON
-#############################################
-
-
+# LİNEER REGRESSION
 
 reg_model = LinearRegression().fit(X, y)
 
@@ -583,9 +524,7 @@ np.mean(np.sqrt(-cross_val_score(reg_model,
                                  cv=5,
                                  scoring="neg_mean_squared_error")))
 
-#############################################
-# Adım 16: ADABOOST REGRESYON
-#############################################
+# ADABOOST REGRESSION
 
 reg_model = AdaBoostRegressor().fit(X, y)
 y_pred = reg_model.predict(X_train)
@@ -616,9 +555,7 @@ np.mean(np.sqrt(-cross_val_score(reg_model,
                                  scoring="neg_mean_squared_error")))
 
 
-#############################################
-# Adım 16: RANDOM FORESTS REGRESYON
-#############################################
+# RANDOM FORESTS REGRESSION
 
 model = RandomForestRegressor().fit(X, y)
 y_pred = reg_model.predict(X_train)
@@ -642,9 +579,7 @@ for i, j in zip(y_test, y_pred):
         small += 1
 print("small:{},big:{}".format(small / (small + big), big / (small + big)))
 
-#############################################
-# Adım 16: GRADIENT BOOSTING REGRESYON
-#############################################
+# GRADIENT BOOSTING REGRESSION
 
 model = GradientBoostingRegressor().fit(X, y)
 y_pred = reg_model.predict(X_train)
@@ -668,9 +603,7 @@ for i, j in zip(y_test, y_pred):
         small += 1
 print("small:{},big:{}".format(small / (small + big), big / (small + big)))
 
-#############################################
-# Adım 16: DECISION TREE REGRESYON
-#############################################
+# DECISION TREE REGRESSION
 
 model = DecisionTreeRegressor().fit(X, y)
 y_pred = model.predict(X_train)
@@ -695,9 +628,7 @@ np.mean(np.sqrt(-cross_val_score(model,
                                  cv=5,
                                  scoring="neg_mean_squared_error")))
 
-#############################################
-# Adım 16: LIGHTGBM
-#############################################
+# LIGHTGBM
 
 model = LGBMRegressor().fit(X, y)
 y_pred = model.predict(X_train)
@@ -722,12 +653,9 @@ for i, j in zip(y_test, y_pred):
         small += 1
 print("small:{},big:{}".format(small / (small + big), big / (small + big)))
 
-#############################################
-# Adım 16: LIGHTGBM HYPERPARAMETER
-#############################################
+# LIGHTGBM HYPERPARAMETERS
 
 model = LGBMRegressor().fit(X, y)
-
 
 model.get_params()
 lgbm_params = {"learning_rate": [0.01, 0.015, 0.02, 0.03, 0.1],
@@ -738,8 +666,6 @@ lgbm_best_grid = GridSearchCV(model, lgbm_params, cv=5, n_jobs=-1, verbose=True)
 
 lgbm_final = model.set_params(**lgbm_best_grid.best_params_, random_state=17).fit(X, y)
 
-
-
 #TRAIN
 y_pred = lgbm_final.predict(X_train)
 # Train RMSE
@@ -747,14 +673,12 @@ np.sqrt(mean_squared_error(y_train, y_pred))
 # TRAIN RKARE
 lgbm_final.score(X_train, y_train)
 
-
 # Test
 y_pred = lgbm_final.predict(X_test)
 # Test RMSE
 np.sqrt(mean_squared_error(y_test, y_pred))
 # TRAIN RKARE
 lgbm_final.score(X_test, y_test)
-
 
 big= 0
 small = 0
